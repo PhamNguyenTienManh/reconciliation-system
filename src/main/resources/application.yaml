@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: partner-file-reader
+  datasource:
+    url: jdbc:mysql://localhost:3306/reconciliation_db
+    username: root
+    password: Manh2004!!!
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+sftp:
+  enabled: true
+  host: localhost
+  port: 2222
+  username: demo
+  password: demo123
+  remote-file-path: /upload/m4becomvsp_07072024_combine.xlsx
+  local-download-dir: input/downloads

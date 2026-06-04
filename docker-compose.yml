@@ -1,0 +1,9 @@
+services:
+  sftp:
+    image: atmoz/sftp:latest
+    container_name: partner-file-reader-sftp
+    ports:
+      - "2222:22"
+    volumes:
+      - ./input:/home/demo/upload
+    command: demo:demo123:1001:1001:upload

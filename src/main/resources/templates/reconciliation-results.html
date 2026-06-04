@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reconciliation Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f6f8fb; }
+        .panel { border: 1px solid #e5e7eb; border-radius: 8px; }
+        code { word-break: break-all; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg bg-white border-bottom">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-semibold" href="/dashboard">Fintech Reconciliation Demo</a>
+        <div class="navbar-nav">
+            <a class="nav-link" href="/dashboard">Dashboard</a>
+            <a class="nav-link" href="/sftp">SFTP</a>
+            <a class="nav-link" href="/data-containers">DataContainer</a>
+            <a class="nav-link active" href="/reconciliation-results">Results</a>
+        </div>
+    </div>
+</nav>
+
+<main class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="h3 mb-1">Reconciliation Results</h1>
+            <p class="text-secondary mb-0">Results for latest run by default.</p>
+        </div>
+        <span class="badge text-bg-secondary" th:if="${selectedRunId != null}" th:text="'Run: ' + ${selectedRunId}"></span>
+    </div>
+
+    <div class="alert alert-warning" th:if="${latestRun == null}">
+        No reconciliation run found.
+    </div>
+
+    <div class="bg-white panel table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+            <tr>
+                <th>Status</th>
+                <th>Match Key</th>
+                <th>Differences</th>
+                <th>Partner Amount</th>
+                <th>Internal Amount</th>
+                <th>Partner Status</th>
+                <th>Internal Status</th>
+                <th>Partner Txn</th>
+                <th>Internal Txn</th>
+                <th>Created Date</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${#lists.isEmpty(records)}">
+                <td colspan="10" class="text-center text-secondary py-4">No results found.</td>
+            </tr>
+            <tr th:each="record : ${records}">
+                <td>
+                    <span class="badge"
+                          th:classappend="${record.resultStatus == 'MATCHED'} ? ' text-bg-success' : (${record.resultStatus == 'MISMATCHED'} ? ' text-bg-danger' : ' text-bg-warning')"
+                          th:text="${record.resultStatus}">MATCHED</span>
+                </td>
+                <td><code th:text="${record.matchKey}">match-key</code></td>
+                <td th:text="${record.differenceFields}">-</td>
+                <td th:text="${record.partnerAmount}">-</td>
+                <td th:text="${record.internalAmount}">-</td>
+                <td th:text="${record.partnerStatus}">-</td>
+                <td th:text="${record.internalStatus}">-</td>
+                <td><code th:text="${record.partnerTransactionId}">-</code></td>
+                <td><code th:text="${record.internalTransactionId}">-</code></td>
+                <td th:text="${record.createdDate}">-</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>
