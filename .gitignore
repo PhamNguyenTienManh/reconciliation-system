@@ -2,6 +2,7 @@ HELP.md
 
 target/
 logs/
+input/
 *.log
 
 ### Maven Wrapper

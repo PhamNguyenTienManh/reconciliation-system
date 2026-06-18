@@ -24,19 +24,21 @@ public class InternalTransactionSeedService {
 
     private static final DateTimeFormatter DATE_FMT =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+    private static final int BATCH_SIZE = 10000;
 
     private final InternalTransactionRepository repository;
 
-    public void seedFromCsv(String csvPath) throws IOException {
+    public SeedSummary seedFromCsv(String csvPath) throws IOException {
         int totalRead = 0;
         int totalSaved = 0;
         int totalError = 0;
+        List<InternalTransaction> transactions = new ArrayList<>();
 
         try (BufferedReader reader = Files.newBufferedReader(Path.of(csvPath), StandardCharsets.UTF_8)) {
             String header = reader.readLine();
             if (header == null) {
                 log.warn("Internal transaction seed file is empty: {}", csvPath);
-                return;
+                return new SeedSummary(totalRead, totalSaved, totalError);
             }
 
             String line;
@@ -50,17 +52,27 @@ public class InternalTransactionSeedService {
                 totalRead++;
                 try {
                     InternalTransaction transaction = mapCsvLine(line);
-                    repository.save(transaction);
+                    transactions.add(transaction);
                     totalSaved++;
+                    if (transactions.size() >= BATCH_SIZE) {
+                        repository.saveAll(transactions);
+                        transactions.clear();
+                    }
                 } catch (Exception e) {
                     totalError++;
                     log.error("Failed to seed internal transaction at line {}: {}", lineNo, e.getMessage(), e);
                 }
             }
+
+            if (!transactions.isEmpty()) {
+                repository.saveAll(transactions);
+                transactions.clear();
+            }
         }
 
         log.info("Seed internal transactions: read={} | saved={} | failed={}",
                 totalRead, totalSaved, totalError);
+        return new SeedSummary(totalRead, totalSaved, totalError);
     }
 
     private InternalTransaction mapCsvLine(String line) {
@@ -119,5 +131,12 @@ public class InternalTransactionSeedService {
             throw new IllegalArgumentException("Missing " + fieldName);
         }
         return value.trim();
+    }
+
+    public record SeedSummary(
+            int totalRead,
+            int totalSaved,
+            int totalError
+    ) {
     }
 }

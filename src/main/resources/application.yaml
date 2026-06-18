@@ -1,15 +1,28 @@
 spring:
   application:
     name: partner-file-reader
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 200MB
   datasource:
-    url: jdbc:mysql://localhost:3306/reconciliation_db
+    url: jdbc:mysql://localhost:3306/reconciliation_db?rewriteBatchedStatements=true&useServerPrepStmts=false
     username: root
     password: Manh2004!!!
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: "10000"
+        order_inserts: "true"
+        order_updates: "true"
+
+app:
+  auto-run: false
 
 sftp:
   enabled: true
@@ -17,5 +30,5 @@ sftp:
   port: 2222
   username: demo
   password: demo123
-  remote-file-path: /upload/m4becomvsp_07072024_combine.xlsx
+  remote-file-path: /upload/fake_partner_data_realistic.xlsx
   local-download-dir: input/downloads

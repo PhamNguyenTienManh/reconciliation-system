@@ -1,6 +1,8 @@
 package com.example.partnerfilereader.repository;
 
 import com.example.partnerfilereader.model.InternalTransaction;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,4 +13,6 @@ public interface InternalTransactionRepository extends JpaRepository<InternalTra
     List<InternalTransaction> findTop100ByOrderByCreatedDateDesc();
 
     List<InternalTransaction> findByProvider(String provider);
+
+    Page<InternalTransaction> findByProvider(String provider, Pageable pageable);
 }

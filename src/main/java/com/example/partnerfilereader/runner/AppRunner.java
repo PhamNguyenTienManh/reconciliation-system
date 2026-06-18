@@ -9,6 +9,7 @@ import com.example.partnerfilereader.service.SftpDownloadService;
 import com.example.partnerfilereader.service.TemplateReaderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
@@ -26,11 +27,19 @@ public class AppRunner implements ApplicationRunner {
     private final SftpDownloadService sftpDownloadService;
     private final SftpProperties sftpProperties;
 
+    @Value("${app.auto-run:false}")
+    private boolean autoRun;
+
     @Override
     public void run(ApplicationArguments args) throws Exception {
+        if (!autoRun) {
+            log.info("App auto-run disabled. Use /reconciliation UI or REST APIs to run import, seed, and reconciliation.");
+            return;
+        }
+
         String templatePath = "input/RequestTemplate.xlsx";
-        String localDataPath = "input/m4becomvsp_07072024_combine.xlsx";
-        String internalSeedPath = "input/internal_transactions_seed.csv";
+        String localDataPath = "input/fake_partner_data_realistic.xlsx";
+        String internalSeedPath = "input/fake_internal_data.csv";
         String reconciliationDate = "07/07/2024 00:00:00";
 
         log.info("Bắt đầu đọc config từ template...");
@@ -67,7 +76,13 @@ public class AppRunner implements ApplicationRunner {
         }
 
         log.info("SFTP enabled. Downloading partner file before ingestion...");
-        Path downloadedFile = sftpDownloadService.downloadConfiguredFile();
-        return downloadedFile.toString();
+        try {
+            Path downloadedFile = sftpDownloadService.downloadConfiguredFile();
+            return downloadedFile.toString();
+        } catch (Exception e) {
+            log.warn("Cannot download partner file from SFTP. Falling back to local file: {}",
+                    localDataPath, e);
+            return localDataPath;
+        }
     }
 }

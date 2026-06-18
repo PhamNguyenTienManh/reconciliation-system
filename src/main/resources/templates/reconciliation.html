@@ -1,396 +1,678 @@
 <!doctype html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Đối soát giao dịch</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Reconciliation Console</title>
     <style>
         :root {
-            --bg: #f4f7fb;
+            --bg: #f6f8fb;
+            --panel: #ffffff;
             --ink: #172033;
             --muted: #667085;
             --line: #e4e7ec;
             --brand: #2563eb;
+            --brand-dark: #1d4ed8;
             --success: #16a34a;
             --warning: #d97706;
             --danger: #dc2626;
+            --shadow: 0 18px 45px rgba(15, 23, 42, .08);
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
+            margin: 0;
             background: var(--bg);
             color: var(--ink);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
-        .shell {
-            max-width: 1320px;
+        button,
+        input {
+            font: inherit;
         }
 
         .topbar {
-            background: linear-gradient(135deg, #0f172a, #1d4ed8);
+            background: #0f172a;
             color: #fff;
+            padding: 28px 0;
+        }
+
+        .shell {
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+        }
+
+        .topbar-grid {
+            display: flex;
+            justify-content: space-between;
+            gap: 24px;
+            align-items: flex-start;
+        }
+
+        .eyebrow {
+            color: #93c5fd;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(28px, 4vw, 42px);
+            line-height: 1.08;
+        }
+
+        .subtitle {
+            margin: 12px 0 0;
+            color: #cbd5e1;
+            max-width: 680px;
+            line-height: 1.6;
+        }
+
+        .run-chip {
+            min-width: 260px;
+            border: 1px solid rgba(255, 255, 255, .16);
+            background: rgba(255, 255, 255, .08);
+            border-radius: 8px;
+            padding: 14px;
+            color: #dbeafe;
+        }
+
+        .run-chip .label {
+            color: #94a3b8;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .run-chip code {
+            display: block;
+            color: #fff;
+            word-break: break-all;
+            font-size: 13px;
+        }
+
+        main {
+            padding: 28px 0 42px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+        }
+
+        .card h2 {
+            margin: 0 0 6px;
+            font-size: 18px;
+        }
+
+        .card p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .form-stack {
+            display: grid;
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .file-input,
+        .text-input {
+            width: 100%;
+            border: 1px solid var(--line);
+            background: #fff;
+            border-radius: 8px;
+            padding: 11px 12px;
+            color: var(--ink);
+        }
+
+        .text-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        label {
+            display: grid;
+            gap: 6px;
+            color: #344054;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .btn {
+            border: 0;
+            border-radius: 8px;
+            padding: 12px 16px;
+            background: var(--brand);
+            color: #fff;
+            font-weight: 750;
+            cursor: pointer;
+            transition: background .15s ease, transform .15s ease, opacity .15s ease;
+        }
+
+        .btn:hover {
+            background: var(--brand-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn.secondary {
+            background: #111827;
+        }
+
+        .btn.secondary:hover {
+            background: #020617;
+        }
+
+        .status {
+            min-height: 22px;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        .status.ok {
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .status.error {
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        .run-panel {
+            margin-top: 18px;
+            display: grid;
+            grid-template-columns: 1.1fr .9fr;
+            gap: 18px;
+        }
+
+        .progress-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            border: 1px solid var(--line);
+            background: #f8fafc;
+            border-radius: 8px;
+            color: var(--muted);
+            min-height: 70px;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid #dbeafe;
+            border-top-color: var(--brand);
+            border-radius: 999px;
+            display: none;
+            animation: spin .8s linear infinite;
+            flex: 0 0 auto;
+        }
+
+        .is-running .spinner {
+            display: block;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .summary-grid {
+            margin-top: 18px;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
         }
 
         .metric {
-            background: rgba(255, 255, 255, .12);
-            border: 1px solid rgba(255, 255, 255, .18);
+            background: #fff;
+            border: 1px solid var(--line);
             border-radius: 8px;
-            padding: 14px 16px;
+            padding: 16px;
         }
 
         .metric .label {
-            color: rgba(255, 255, 255, .74);
-            font-size: .85rem;
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 8px;
         }
 
         .metric .value {
-            font-size: 1.7rem;
-            font-weight: 750;
-            line-height: 1.1;
+            font-size: 30px;
+            line-height: 1;
+            font-weight: 800;
         }
 
-        .section-card,
-        .comparison-card {
-            background: #fff;
-            border: 1px solid var(--line);
-            border-radius: 10px;
-            box-shadow: 0 10px 24px rgba(15, 23, 42, .04);
+        .metric.matched .value {
+            color: var(--success);
         }
 
-        .comparison-card {
-            overflow: hidden;
+        .metric.mismatched .value {
+            color: var(--danger);
         }
 
-        .result-strip {
-            border-left: 5px solid var(--line);
+        .metric.partner-only .value,
+        .metric.internal-only .value {
+            color: var(--warning);
         }
 
-        .result-strip.status-matched {
-            border-left-color: var(--success);
+        .details {
+            margin-top: 14px;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            color: var(--muted);
+            font-size: 14px;
         }
 
-        .result-strip.status-mismatched {
-            border-left-color: var(--danger);
-        }
-
-        .result-strip.status-partner-only,
-        .result-strip.status-internal-only {
-            border-left-color: var(--warning);
-        }
-
-        .status-pill {
-            border-radius: 999px;
-            font-weight: 700;
-            padding: 6px 10px;
-        }
-
-        .status-pill.status-matched {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .status-pill.status-mismatched {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .status-pill.status-partner-only,
-        .status-pill.status-internal-only {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .side-panel {
+        .detail-item {
             border: 1px solid var(--line);
             border-radius: 8px;
-            overflow: hidden;
-            height: 100%;
+            padding: 12px;
+            background: #fff;
         }
 
-        .side-title {
-            background: #f8fafc;
-            border-bottom: 1px solid var(--line);
-            padding: 12px 14px;
-            font-weight: 750;
+        .detail-item strong {
+            display: block;
+            color: var(--ink);
+            margin-top: 4px;
+            word-break: break-word;
         }
 
-        .field-row {
-            display: grid;
-            grid-template-columns: 150px 1fr;
-            gap: 12px;
-            padding: 11px 14px;
-            border-bottom: 1px solid #f1f3f7;
+        .toast {
+            position: fixed;
+            right: 18px;
+            bottom: 18px;
+            max-width: 420px;
+            background: #111827;
+            color: #fff;
+            border-radius: 8px;
+            padding: 13px 14px;
+            box-shadow: 0 16px 40px rgba(15, 23, 42, .2);
+            display: none;
+            z-index: 10;
+            line-height: 1.45;
         }
 
-        .field-row:last-child {
-            border-bottom: 0;
+        .toast.show {
+            display: block;
         }
 
-        .field-label {
-            color: var(--muted);
-            font-size: .86rem;
+        @media (max-width: 980px) {
+            .grid,
+            .run-panel,
+            .summary-grid,
+            .details {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar-grid {
+                display: grid;
+            }
+
+            .run-chip {
+                min-width: 0;
+            }
         }
 
-        .field-value {
-            font-weight: 650;
-            overflow-wrap: anywhere;
-        }
-
-        .field-diff {
-            background: #fff1f2;
-        }
-
-        .missing-box {
-            min-height: 260px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            color: var(--muted);
-            background: #f8fafc;
-            padding: 24px;
-        }
-
-        .mini-table th {
-            color: var(--muted);
-            font-weight: 650;
-        }
-
-        .legend-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 999px;
-            display: inline-block;
-            margin-right: 6px;
-        }
-
-        code {
-            color: #334155;
-            background: #f1f5f9;
-            border-radius: 6px;
-            padding: 2px 6px;
+        @media (max-width: 640px) {
+            .text-row {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
 <header class="topbar">
-    <div class="container shell py-4">
-        <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
-            <div>
-                <div class="text-white-50 mb-1">Fintech reconciliation demo</div>
-                <h1 class="h2 mb-2">Màn hình đối soát giao dịch</h1>
-                <p class="mb-0 text-white-50">
-                    So sánh dữ liệu từ file đối tác với dữ liệu nội bộ, chỉ rõ giao dịch nào khớp, lệch field nào hoặc thiếu ở bên nào.
-                </p>
-            </div>
-            <div class="text-end small" th:if="${latestRun != null}">
-                <div class="text-white-50">Latest run</div>
-                <div><code th:text="${latestRun.runId}">run-id</code></div>
-                <div class="text-white-50 mt-1" th:text="${latestRun.startedAt}">startedAt</div>
-            </div>
+    <div class="shell topbar-grid">
+        <div>
+            <div class="eyebrow">Reconciliation operations</div>
+            <h1>Điều phối đối soát giao dịch</h1>
+            <p class="subtitle">
+                Import file partner, seed dữ liệu nội bộ, chạy đối soát và xem kết quả theo từng run.
+            </p>
         </div>
-
-        <div class="row g-3 mt-3">
-            <div class="col-6 col-lg-2">
-                <div class="metric">
-                    <div class="label">Partner records</div>
-                    <div class="value" th:text="${stats['totalPartnerRecords']}">0</div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-2">
-                <div class="metric">
-                    <div class="label">Internal records</div>
-                    <div class="value" th:text="${stats['totalInternalRecords']}">0</div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-2">
-                <div class="metric">
-                    <div class="label">Khớp</div>
-                    <div class="value" th:text="${stats['matched']}">0</div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-2">
-                <div class="metric">
-                    <div class="label">Thiếu nội bộ</div>
-                    <div class="value" th:text="${stats['missingInternal']}">0</div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-2">
-                <div class="metric">
-                    <div class="label">Thiếu đối tác</div>
-                    <div class="value" th:text="${stats['missingPartner']}">0</div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-2">
-                <div class="metric">
-                    <div class="label">Lệch tiền</div>
-                    <div class="value" th:text="${stats['amountMismatch']}">0</div>
-                </div>
-            </div>
+        <div class="run-chip">
+            <div class="label">Run gần nhất trong phiên này</div>
+            <code id="latestRunId">Chưa có run</code>
         </div>
     </div>
 </header>
 
-<main class="container shell py-4">
-    <div class="section-card p-3 mb-4">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-            <div>
-                <h2 class="h5 mb-1">Cách đọc màn hình</h2>
-                <div class="text-secondary">
-                    Mỗi card là một giao dịch. Cột trái là dữ liệu từ file Partner, cột phải là dữ liệu Internal.
-                    Ô màu đỏ là field đang lệch.
+<main class="shell">
+    <section class="grid">
+        <article class="card">
+            <h2>1. Upload file partner</h2>
+            <p>Đọc Excel hoặc CSV theo cấu hình trong RequestTemplate và import vào bảng DataContainer.</p>
+            <form id="partnerForm" class="form-stack">
+                <label>
+                    File Excel hoặc CSV
+                    <input id="partnerFile" class="file-input" type="file" accept=".xlsx,.csv" required>
+                </label>
+                <button id="partnerButton" class="btn" type="submit">Import partner data</button>
+                <div id="partnerStatus" class="status">Chưa import.</div>
+                <div class="status">Thời gian: <strong id="partnerDuration">0.0s</strong></div>
+            </form>
+        </article>
+
+        <article class="card">
+            <h2>2. Seed internal CSV</h2>
+            <p>Upload CSV và ghi dữ liệu vào bảng internal_transactions để làm nguồn đối soát.</p>
+            <form id="seedForm" class="form-stack">
+                <label>
+                    File CSV
+                    <input id="seedFile" class="file-input" type="file" accept=".csv" required>
+                </label>
+                <button id="seedButton" class="btn" type="submit">Seed internal data</button>
+                <div id="seedStatus" class="status">Chưa seed.</div>
+                <div class="status">Thời gian: <strong id="seedDuration">0.0s</strong></div>
+            </form>
+        </article>
+
+        <article class="card">
+            <h2>3. Chạy đối soát</h2>
+            <p>Gửi identify và reconciliationDate để tạo reconciliation run mới.</p>
+            <form id="runForm" class="form-stack">
+                <div class="text-row">
+                    <label>
+                        Identify
+                        <input id="identify" class="text-input" type="text" value="MOMO" required>
+                    </label>
+                    <label>
+                        Reconciliation date
+                        <input id="reconciliationDate" class="text-input" type="text" value="07/07/2024" required>
+                    </label>
+                </div>
+                <button id="runButton" class="btn secondary" type="submit">Run reconciliation</button>
+                <div id="runStatus" class="status">Chưa chạy đối soát.</div>
+                <div class="status">Thời gian: <strong id="runDuration">0.0s</strong></div>
+            </form>
+        </article>
+    </section>
+
+    <section class="run-panel">
+        <article class="card">
+            <h2>Tiến trình</h2>
+            <div id="progressBox" class="progress-box">
+                <div class="spinner" aria-hidden="true"></div>
+                <div>
+                    <strong id="progressTitle">Sẵn sàng</strong>
+                    <div id="progressText">Chọn file và bấm các nút theo thứ tự import, seed, run.</div>
                 </div>
             </div>
-            <div class="d-flex flex-wrap gap-3 small">
-                <span><span class="legend-dot" style="background:#16a34a"></span>Khớp</span>
-                <span><span class="legend-dot" style="background:#dc2626"></span>Lệch dữ liệu</span>
-                <span><span class="legend-dot" style="background:#d97706"></span>Missing</span>
-            </div>
-        </div>
-    </div>
+        </article>
 
-    <div class="alert alert-warning" th:if="${latestRun == null}">
-        Chưa có lần chạy đối soát. Hãy chạy application để import dữ liệu và tạo reconciliation run.
-    </div>
-
-    <div th:if="${#lists.isEmpty(rows)}" class="section-card p-4 text-center text-secondary">
-        Chưa có kết quả đối soát để hiển thị.
-    </div>
-
-    <section class="d-grid gap-3">
-        <article class="comparison-card result-strip"
-                 th:each="row : ${rows}"
-                 th:classappend="${row.statusClass}">
-            <div class="p-3 border-bottom">
-                <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
-                    <div>
-                        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                            <span class="status-pill"
-                                  th:classappend="${row.statusClass}"
-                                  th:text="${row.statusLabel}">Khớp</span>
-                            <span class="text-secondary">Match key</span>
-                            <code th:text="${row.matchKey}">match-key</code>
-                        </div>
-                        <div class="text-secondary" th:text="${row.explanation}">
-                            Hai bên có cùng giao dịch và các field chính đều khớp.
-                        </div>
-                    </div>
-                    <div class="text-end small">
-                        <div class="text-secondary">Result ID</div>
-                        <code th:text="${row.resultId}">result-id</code>
-                    </div>
+        <article class="card">
+            <h2>Thời gian chạy</h2>
+            <div class="details" style="grid-template-columns:1fr 1fr">
+                <div class="detail-item">
+                    Trạng thái
+                    <strong id="runState">Idle</strong>
                 </div>
-            </div>
-
-            <div class="p-3">
-                <div class="row g-3">
-                    <div class="col-lg-6">
-                        <div class="side-panel">
-                            <div class="side-title">Partner file</div>
-                            <div th:if="${row.hasPartner}">
-                                <div class="field-row">
-                                    <div class="field-label">Transaction ID</div>
-                                    <div class="field-value" th:text="${row.partnerTransactionId}">-</div>
-                                </div>
-                                <div class="field-row" th:classappend="${row.amountDifferent} ? ' field-diff' : ''">
-                                    <div class="field-label">Amount</div>
-                                    <div class="field-value" th:text="${row.partnerAmount}">-</div>
-                                </div>
-                                <div class="field-row" th:classappend="${row.currencyDifferent} ? ' field-diff' : ''">
-                                    <div class="field-label">Currency</div>
-                                    <div class="field-value" th:text="${row.partnerCurrency}">-</div>
-                                </div>
-                                <div class="field-row" th:classappend="${row.statusDifferent} ? ' field-diff' : ''">
-                                    <div class="field-label">Status</div>
-                                    <div class="field-value" th:text="${row.partnerStatus}">-</div>
-                                </div>
-                                <div class="field-row" th:classappend="${row.transDateDifferent} ? ' field-diff' : ''">
-                                    <div class="field-label">Transaction Date</div>
-                                    <div class="field-value" th:text="${row.partnerTransDate}">-</div>
-                                </div>
-                            </div>
-                            <div class="missing-box" th:if="${!row.hasPartner}">
-                                <div>
-                                    <div class="fw-semibold mb-1">Không có trong file đối tác</div>
-                                    <div>Internal có giao dịch này nhưng Partner không gửi sang.</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-lg-6">
-                        <div class="side-panel">
-                            <div class="side-title">Internal system</div>
-                            <div th:if="${row.hasInternal}">
-                                <div class="field-row">
-                                    <div class="field-label">Transaction ID</div>
-                                    <div class="field-value" th:text="${row.internalTransactionId}">-</div>
-                                </div>
-                                <div class="field-row" th:classappend="${row.amountDifferent} ? ' field-diff' : ''">
-                                    <div class="field-label">Amount</div>
-                                    <div class="field-value" th:text="${row.internalAmount}">-</div>
-                                </div>
-                                <div class="field-row" th:classappend="${row.currencyDifferent} ? ' field-diff' : ''">
-                                    <div class="field-label">Currency</div>
-                                    <div class="field-value" th:text="${row.internalCurrency}">-</div>
-                                </div>
-                                <div class="field-row" th:classappend="${row.statusDifferent} ? ' field-diff' : ''">
-                                    <div class="field-label">Status</div>
-                                    <div class="field-value" th:text="${row.internalStatus}">-</div>
-                                </div>
-                                <div class="field-row" th:classappend="${row.transDateDifferent} ? ' field-diff' : ''">
-                                    <div class="field-label">Transaction Date</div>
-                                    <div class="field-value" th:text="${row.internalTransDate}">-</div>
-                                </div>
-                            </div>
-                            <div class="missing-box" th:if="${!row.hasInternal}">
-                                <div>
-                                    <div class="fw-semibold mb-1">Không có trong hệ thống nội bộ</div>
-                                    <div>Partner có giao dịch này nhưng Internal không tìm thấy.</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="detail-item">
+                    Duration
+                    <strong id="duration">0.0s</strong>
                 </div>
             </div>
         </article>
     </section>
 
-    <section class="section-card mt-4 overflow-hidden">
-        <div class="p-3 border-bottom">
-            <h2 class="h5 mb-1">Reconciliation Results</h2>
-            <div class="text-secondary">Bảng kết luận cuối cùng được lưu trong database `reconciliation_results`.</div>
+    <section class="card" style="margin-top:18px">
+        <h2>4. Kết quả đối soát</h2>
+        <p>Thông số được lấy từ <code>GET /api/reconciliation/runs/{runId}</code> sau khi run hoàn tất.</p>
+
+        <div class="summary-grid">
+            <div class="metric matched">
+                <div class="label">MATCHED</div>
+                <div id="matched" class="value">0</div>
+            </div>
+            <div class="metric mismatched">
+                <div class="label">MISMATCHED</div>
+                <div id="mismatched" class="value">0</div>
+            </div>
+            <div class="metric partner-only">
+                <div class="label">PARTNER_ONLY</div>
+                <div id="partnerOnly" class="value">0</div>
+            </div>
+            <div class="metric internal-only">
+                <div class="label">INTERNAL_ONLY</div>
+                <div id="internalOnly" class="value">0</div>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0 mini-table">
-                <thead class="table-light">
-                <tr>
-                    <th>Kết quả</th>
-                    <th>Match key</th>
-                    <th>Field lệch / missing</th>
-                    <th>Partner Txn</th>
-                    <th>Internal Txn</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:if="${#lists.isEmpty(rows)}">
-                    <td colspan="5" class="text-center text-secondary py-4">No results found.</td>
-                </tr>
-                <tr th:each="row : ${rows}">
-                    <td>
-                        <span class="status-pill"
-                              th:classappend="${row.statusClass}"
-                              th:text="${row.statusLabel}">Khớp</span>
-                    </td>
-                    <td><code th:text="${row.matchKey}">match-key</code></td>
-                    <td th:text="${row.differencesText}">-</td>
-                    <td th:text="${row.partnerTransactionId ?: '-'}">-</td>
-                    <td th:text="${row.internalTransactionId ?: '-'}">-</td>
-                </tr>
-                </tbody>
-            </table>
+
+        <div class="details">
+            <div class="detail-item">
+                Partner records
+                <strong id="totalPartner">0</strong>
+            </div>
+            <div class="detail-item">
+                Internal records
+                <strong id="totalInternal">0</strong>
+            </div>
+            <div class="detail-item">
+                Status
+                <strong id="summaryStatus">-</strong>
+            </div>
+            <div class="detail-item">
+                Finished at
+                <strong id="finishedAt">-</strong>
+            </div>
         </div>
     </section>
 </main>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    const state = {
+        timer: null,
+        startedAt: 0,
+        latestRunId: ""
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const formatNumber = (value) => new Intl.NumberFormat("vi-VN").format(value ?? 0);
+
+    function setStatus(id, message, type = "") {
+        const element = $(id);
+        element.textContent = message;
+        element.className = `status ${type}`.trim();
+    }
+
+    function showToast(message) {
+        const toast = $("toast");
+        toast.textContent = message;
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 4200);
+    }
+
+    async function parseResponse(response) {
+        const text = await response.text();
+        let body = {};
+        try {
+            body = text ? JSON.parse(text) : {};
+        } catch (error) {
+            body = {message: text};
+        }
+        if (!response.ok) {
+            throw new Error(body.message || body.error || text || `HTTP ${response.status}`);
+        }
+        return body;
+    }
+
+    function setBusy(buttonId, busy) {
+        $(buttonId).disabled = busy;
+    }
+
+    function elapsedSeconds(startedAt) {
+        return `${((performance.now() - startedAt) / 1000).toFixed(1)}s`;
+    }
+
+    function startTimer() {
+        state.startedAt = performance.now();
+        $("progressBox").classList.add("is-running");
+        $("runState").textContent = "Running";
+        state.timer = setInterval(() => {
+            const seconds = (performance.now() - state.startedAt) / 1000;
+            $("duration").textContent = `${seconds.toFixed(1)}s`;
+        }, 100);
+    }
+
+    function stopTimer(finalState) {
+        if (state.timer) {
+            clearInterval(state.timer);
+            state.timer = null;
+        }
+        const seconds = (performance.now() - state.startedAt) / 1000;
+        $("duration").textContent = `${seconds.toFixed(1)}s`;
+        $("progressBox").classList.remove("is-running");
+        $("runState").textContent = finalState;
+    }
+
+    async function uploadFile(endpoint, fileInputId) {
+        const file = $(fileInputId).files[0];
+        if (!file) {
+            throw new Error("Vui lòng chọn file trước khi chạy.");
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch(endpoint, {
+            method: "POST",
+            body: formData
+        });
+        return parseResponse(response);
+    }
+
+    async function loadRunSummary(runId) {
+        const response = await fetch(`/api/reconciliation/runs/${encodeURIComponent(runId)}`);
+        const summary = await parseResponse(response);
+
+        $("matched").textContent = formatNumber(summary.matched);
+        $("mismatched").textContent = formatNumber(summary.mismatched);
+        $("partnerOnly").textContent = formatNumber(summary.partnerOnly);
+        $("internalOnly").textContent = formatNumber(summary.internalOnly);
+        $("totalPartner").textContent = formatNumber(summary.totalPartnerRecords);
+        $("totalInternal").textContent = formatNumber(summary.totalInternalRecords);
+        $("summaryStatus").textContent = summary.status || "-";
+        $("finishedAt").textContent = summary.finishedAt || "-";
+    }
+
+    $("partnerForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const startedAt = performance.now();
+        setBusy("partnerButton", true);
+        setStatus("partnerStatus", "Đang import partner data...");
+        $("partnerDuration").textContent = "Đang chạy...";
+        $("progressTitle").textContent = "Import partner data";
+        $("progressText").textContent = "Đang đọc file partner và lưu DataContainer theo batch.";
+
+        try {
+            const result = await uploadFile("/api/reconciliation/import", "partnerFile");
+            $("partnerDuration").textContent = elapsedSeconds(startedAt);
+            setStatus("partnerStatus", result.message, "ok");
+            showToast(result.message);
+        } catch (error) {
+            $("partnerDuration").textContent = elapsedSeconds(startedAt);
+            setStatus("partnerStatus", error.message, "error");
+            showToast(error.message);
+        } finally {
+            setBusy("partnerButton", false);
+        }
+    });
+
+    $("seedForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const startedAt = performance.now();
+        setBusy("seedButton", true);
+        setStatus("seedStatus", "Đang seed internal data...");
+        $("seedDuration").textContent = "Đang chạy...";
+        $("progressTitle").textContent = "Seed internal data";
+        $("progressText").textContent = "Đang đọc CSV và lưu internal_transactions theo batch.";
+
+        try {
+            const result = await uploadFile("/api/internal/seed", "seedFile");
+            $("seedDuration").textContent = elapsedSeconds(startedAt);
+            setStatus("seedStatus", result.message, "ok");
+            showToast(result.message);
+        } catch (error) {
+            $("seedDuration").textContent = elapsedSeconds(startedAt);
+            setStatus("seedStatus", error.message, "error");
+            showToast(error.message);
+        } finally {
+            setBusy("seedButton", false);
+        }
+    });
+
+    $("runForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        setBusy("runButton", true);
+        setStatus("runStatus", "Đang chạy đối soát...");
+        $("runDuration").textContent = "Đang chạy...";
+        $("progressTitle").textContent = "Đang chạy đối soát";
+        $("progressText").textContent = "Vui lòng chờ trong khi hệ thống so sánh partner và internal records.";
+        startTimer();
+
+        try {
+            const response = await fetch("/api/reconciliation/run", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    identify: $("identify").value,
+                    reconciliationDate: $("reconciliationDate").value
+                })
+            });
+            const result = await parseResponse(response);
+            state.latestRunId = result.runId;
+            $("latestRunId").textContent = result.runId;
+            setStatus("runStatus", `${result.message}. Run ID: ${result.runId}`, "ok");
+            await loadRunSummary(result.runId);
+            $("progressTitle").textContent = "Đối soát hoàn tất";
+            $("progressText").textContent = "Kết quả đã được tải và hiển thị bên dưới.";
+            showToast("Đối soát hoàn tất");
+        } catch (error) {
+            setStatus("runStatus", error.message, "error");
+            $("progressTitle").textContent = "Đối soát thất bại";
+            $("progressText").textContent = error.message;
+            showToast(error.message);
+            stopTimer("Failed");
+            $("runDuration").textContent = $("duration").textContent;
+            setBusy("runButton", false);
+            return;
+        } finally {
+            setBusy("runButton", false);
+        }
+        stopTimer("Completed");
+        $("runDuration").textContent = $("duration").textContent;
+    });
+</script>
 </body>
 </html>

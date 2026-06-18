@@ -2,7 +2,10 @@ package com.example.partnerfilereader.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,12 +20,19 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "reconciliation_results")
+@Table(
+        name = "reconciliation_results",
+        indexes = {
+                @Index(name = "idx_recon_result_run_status", columnList = "run_id,result_status"),
+                @Index(name = "idx_recon_result_run_created", columnList = "run_id,created_date")
+        }
+)
 public class ReconciliationResult {
 
     @Id
-    @Column(name = "result_id", length = 64)
-    private String resultId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "result_id")
+    private Long resultId;
 
     @Column(name = "run_id", length = 64)
     private String runId;

@@ -3,6 +3,7 @@ package com.example.partnerfilereader.model;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +18,14 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "internal_transactions")
+@Table(
+        name = "internal_transactions",
+        indexes = {
+                @Index(name = "idx_internal_provider_trace", columnList = "provider,trace"),
+                @Index(name = "idx_internal_provider_transaction", columnList = "provider,transaction_id"),
+                @Index(name = "idx_internal_provider_created", columnList = "provider,created_date")
+        }
+)
 public class InternalTransaction {
 
     @Id
